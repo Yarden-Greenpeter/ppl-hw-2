@@ -9,7 +9,7 @@ import { isBoolExp, isCExp, isLitExp, isNumExp, isPrimOp, isStrExp, isVarRef,
          ClassExp} from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeExtEnv, Env } from "./L3-env-env";
 import { isClosure, makeClosureEnv, Closure, Value } from "./L3-value";
-import { isClassExp, makeClassEnv, Class } from "./L3-value"; // new
+import { isClass, makeClassEnv, Class } from "./L3-value"; // new
 import { applyPrimitive } from "./evalPrimitive";
 import { allT, first, rest, isEmpty, isNonEmptyList } from "../shared/list";
 import { Result, makeOk, makeFailure, bind, mapResult } from "../shared/result";
@@ -36,7 +36,7 @@ const applicativeEval = (exp: CExp, env: Env): Result<Value> =>
                               (args: Value[]) =>
                                  applyProcedure(proc, args))) :
     // @@ added here
-    isClassExp(exp) ? evalClass(exp, env) :
+    isClass(exp) ? evalClass(exp, env) :
     makeFailure('"let" not supported (yet)');
 
 export const isTrueValue = (x: Value): boolean =>
