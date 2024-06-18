@@ -31,8 +31,8 @@ export const isClosure = (x: any): x is Closure => x.tag === "Closure";
 // @@ Added here "Class" (similar to closure, but with bindings):
 export type Class = {
     tag: "Class";
-    fields: VarDecl[];  // fields
-    methods: Binding[]; // methods
+    fields: VarDecl[];
+    methods: Binding[];
     env: Env;
 }
 export const makeClass = (fields: VarDecl[], methods: Binding[]): Class =>
@@ -59,7 +59,7 @@ export type SymbolSExp = {
 
 // @@ Added "Class" here
 // export type SExpValue = number | boolean | string | PrimOp | Closure | SymbolSExp | EmptySExp | CompoundSExp | Class;
-export type SExpValue = number | boolean | string | PrimOp | Closure | SymbolSExp | EmptySExp | CompoundSExp;
+export type SExpValue = number | boolean | string | PrimOp | Closure | SymbolSExp | EmptySExp | CompoundSExp | Class;
 export const isSExp = (x: any): x is SExpValue =>
     typeof(x) === 'string' || typeof(x) === 'boolean' || typeof(x) === 'number' ||
     isSymbolSExp(x) || isCompoundSExp(x) || isEmptySExp(x) || isPrimOp(x) || isClosure(x);
@@ -92,7 +92,10 @@ export const compoundSExpToArray = (cs: CompoundSExp, res: string[]): string[] |
 export const compoundSExpToString = (cs: CompoundSExp, css = compoundSExpToArray(cs, [])): string => 
     isArray(css) ? `(${css.join(' ')})` :
     `(${css.s1.join(' ')} . ${css.s2})`
-
+//@@ Added classSexpTostring.
+export const classSexpToString = (c: Class): string =>
+    `<Class ${c.fields} ${c.methods}>`
+    
 export const valueToString = (val: Value): string =>
     isNumber(val) ?  val.toString() :
     val === true ? '#t' :
@@ -103,4 +106,5 @@ export const valueToString = (val: Value): string =>
     isSymbolSExp(val) ? val.val :
     isEmptySExp(val) ? "'()" :
     isCompoundSExp(val) ? compoundSExpToString(val) :
+    isClass(val) ? classSexpToString(val) : //@@ Added this line to handle every Sexp
     val;

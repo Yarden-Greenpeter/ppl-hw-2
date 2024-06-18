@@ -67,9 +67,9 @@ export type Binding = {tag: "Binding"; var: VarDecl; val: CExp; }
 export type LetExp = {tag: "LetExp"; bindings: Binding[]; body: CExp[]; }
 // L3
 export type LitExp = {tag: "LitExp"; val: SExpValue; }
-// @@ Added here - TODO
-export type ClassExp = {tag: "Class"; fields: VarDecl[], methods:Binding[]}
-//yarden is the king of spagatii.
+// @@ Added here
+export type ClassExp = {tag: "ClassExp"; fields: VarDecl[], methods:Binding[]}
+
 // Type value constructors for disjoint types
 export const makeProgram = (exps: Exp[]): Program => ({tag: "Program", exps: exps});
 export const makeDefineExp = (v: VarDecl, val: CExp): DefineExp =>
@@ -94,9 +94,9 @@ export const makeLetExp = (bindings: Binding[], body: CExp[]): LetExp =>
 // L3
 export const makeLitExp = (val: SExpValue): LitExp =>
     ({tag: "LitExp", val: val});
-// @@ Added here - update
+// @@ Added here
 export const makeClassExp = (fields: VarDecl[], methods:Binding[]): ClassExp =>
-    ({tag: "Class", fields: fields, methods: methods});
+    ({tag: "ClassExp", fields: fields, methods: methods});
 
 // Type predicates for disjoint types
 export const isProgram = (x: any): x is Program => x.tag === "Program";
@@ -321,7 +321,6 @@ export const parseSExp = (sexp: Sexp): Result<SExpValue> =>
 
 import { isSymbolSExp, isEmptySExp, isCompoundSExp } from './L3-value';
 import { format } from "../shared/format";
-import { Env } from "./L3-env-env";
 import { Env } from "./L3-env-env";
 
 // Add a quote for symbols, empty and compound sexp - strings and numbers are not quoted.
