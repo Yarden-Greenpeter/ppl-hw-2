@@ -9,7 +9,7 @@ import { isBoolExp, isCExp, isLitExp, isNumExp, isPrimOp, isStrExp, isVarRef,
          ClassExp} from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeExtEnv, Env } from "./L3-env-env";
 import { isClosure, makeClosureEnv, Closure, Value } from "./L3-value";
-import { isClass, makeClassEnv, Class } from "./L3-value"; // new
+import { isClassExp, makeClassEnv, Class } from "./L3-value"; // new
 import { applyPrimitive } from "./evalPrimitive";
 import { allT, first, rest, isEmpty, isNonEmptyList } from "../shared/list";
 import { Result, makeOk, makeFailure, bind, mapResult } from "../shared/result";
@@ -35,8 +35,8 @@ const applicativeEval = (exp: CExp, env: Env): Result<Value> =>
                            applicativeEval(rand, env), exp.rands),
                               (args: Value[]) =>
                                  applyProcedure(proc, args))) :
-    // @@ added here - TODO:
-    // isClassExp(exp) ? evalClass(exp, env) :
+    // @@ added here
+    isClassExp(exp) ? evalClass(exp, env) :
     makeFailure('"let" not supported (yet)');
 
 export const isTrueValue = (x: Value): boolean =>
@@ -52,7 +52,7 @@ const evalProc = (exp: ProcExp, env: Env): Result<Closure> =>
 
 // @@ Added here - TODO
 const evalClass = (exp: ClassExp, env: Env): Result<Class> =>
-    makeOk(makeClassEnv(exp.args, exp.body, env));
+    makeOk(makeClassEnv(exp.fields, exp.methods, env));
 
 
 // KEY: This procedure does NOT have an env parameter.

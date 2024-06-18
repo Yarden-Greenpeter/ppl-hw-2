@@ -279,7 +279,7 @@ export const parseClassExp = (fields: Sexp, methods: Sexp): Result<ClassExp> => 
         return makeFailure('Malformed bindings in "Class" expression');
     }
     // parse fields
-    const parsedFields = map(((x : string) => makeVarDecl(x)), map( x => (typeof x === 'string') ? `"${x}"` : "",  fields)); // get valid str fields and turn them into varDec
+    const parsedFields = map(makeVarDecl, fields);
     // parse methods
     const methodNames = map(x => x[0], methods); // convert method names to string
     const parsedMethodsExp = mapResult(parseL3CExp, map(second, methods));

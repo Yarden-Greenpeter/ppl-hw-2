@@ -30,17 +30,17 @@ export const isClosure = (x: any): x is Closure => x.tag === "Closure";
 // ========================================================
 // @@ Added here "Class" (similar to closure, but with bindings):
 export type Class = {
-    tag: "Class";
+    tag: "ClassExp";
     fields: VarDecl[];
     methods: Binding[];
     env: Env;
 }
 export const makeClass = (fields: VarDecl[], methods: Binding[]): Class =>
-    ({tag: "Class", fields: fields, methods: methods, env : makeEmptyEnv()});
+    ({tag: "ClassExp", fields: fields, methods: methods, env : makeEmptyEnv()});
 export const makeClassEnv = (fields: VarDecl[], methods: Binding[], env: Env): Class =>
-    ({ tag: "Class", fields, methods, env });
+    ({ tag: "ClassExp", fields, methods, env });
 
-export const isClass = (x: any): x is Class => x.tag === "Class";
+export const isClassExp = (x: any): x is Class => x.tag === "ClassExp";
 // ========================================================
 
 // SExp
@@ -106,5 +106,5 @@ export const valueToString = (val: Value): string =>
     isSymbolSExp(val) ? val.val :
     isEmptySExp(val) ? "'()" :
     isCompoundSExp(val) ? compoundSExpToString(val) :
-    isClass(val) ? classSexpToString(val) : //@@ Added this line to handle every Sexp
+    isClassExp(val) ? classSexpToString(val) : //@@ Added this line to handle every Sexp
     val;
