@@ -1,14 +1,15 @@
 // L3-eval.ts
 import { map } from "ramda";
-import { isCExp, isLetExp } from "./L3-ast";
+import { isCExp, isLetExp, makeClassExp } from "./L3-ast";
 import { BoolExp, CExp, Exp, IfExp, LitExp, NumExp,
-         PrimOp, ProcExp, Program, StrExp, VarDecl } from "./L3-ast";
+         PrimOp, ProcExp, Program, StrExp, VarDecl, ClassExp } from "./L3-ast";
 import { isAppExp, isBoolExp, isDefineExp, isIfExp, isLitExp, isNumExp,
-             isPrimOp, isProcExp, isStrExp, isVarRef } from "./L3-ast";
+             isPrimOp, isProcExp, isStrExp, isVarRef, isClassExp } from "./L3-ast";
 import { makeBoolExp, makeLitExp, makeNumExp, makeProcExp, makeStrExp } from "./L3-ast";
 import { parseL3Exp } from "./L3-ast";
-import { applyEnv, makeEmptyEnv, makeEnv, Env } from "./L3-env-sub";
-import { isClosure, makeClosure, Closure, Value } from "./L3-value";
+import { applyEnv, makeEmptyEnv, makeEnv, Env, isEmptyEnv, isNonEmptyEnv } from "./L3-env-sub";
+import { isClosure, makeClosure, Closure, Value, makeClassEnv, isClass } from "./L3-value";
+import { makeClass, Class  } from "./L3-value";
 import { first, rest, isEmpty, List, isNonEmptyList } from '../shared/list';
 import { isBoolean, isNumber, isString } from "../shared/type-predicates";
 import { Result, makeOk, makeFailure, bind, mapResult, mapv } from "../shared/result";
@@ -37,7 +38,9 @@ const L3applicativeEval = (exp: CExp, env: Env): Result<Value> =>
                             (rands: Value[]) =>
                                 L3applyProcedure(rator, rands, env))) :
     isLetExp(exp) ? makeFailure('"let" not supported (yet)') :
+    isClassExp(exp) ? evalClass(exp, env) :
     makeFailure('Never');
+
 
 export const isTrueValue = (x: Value): boolean =>
     ! (x === false);
@@ -55,16 +58,20 @@ const L3applyProcedure = (proc: Value, args: Value[], env: Env): Result<Value> =
     isClosure(proc) ? applyClosure(proc, args, env) :
     makeFailure(`Bad procedure ${format(proc)}`);
 
+const evalClass = (exp: ClassExp, env: Env): Result<Class> => 
+    makeOk(makeClass(exp.fields, exp.methods));
+
 // Applications are computed by substituting computed
 // values into the body of the closure.
 // To make the types fit - computed values of params must be
 // turned back in Literal Expressions that eval to the computed value.
-const valueToLitExp = (v: Value): NumExp | BoolExp | StrExp | LitExp | PrimOp | ProcExp =>
+const valueToLitExp = (v: Value): NumExp | BoolExp | StrExp | LitExp | PrimOp | ProcExp | ClassExp =>
     isNumber(v) ? makeNumExp(v) :
     isBoolean(v) ? makeBoolExp(v) :
     isString(v) ? makeStrExp(v) :
     isPrimOp(v) ? v :
     isClosure(v) ? makeProcExp(v.params, v.body) :
+    isClass(v) ? makeClassExp(v.fields, v.methods) :
     makeLitExp(v);
 
 const applyClosure = (proc: Closure, args: Value[], env: Env): Result<Value> => {
