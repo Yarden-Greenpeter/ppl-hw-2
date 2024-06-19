@@ -56,6 +56,7 @@ const evalProc = (exp: ProcExp, env: Env): Result<Closure> =>
 const L3applyProcedure = (proc: Value, args: Value[], env: Env): Result<Value> =>
     isPrimOp(proc) ? applyPrimitive(proc, args) :
     isClosure(proc) ? applyClosure(proc, args, env) :
+    isClass(proc) ? applyClass(proc, args, env) :
     makeFailure(`Bad procedure ${format(proc)}`);
 
 const evalClass = (exp: ClassExp, env: Env): Result<Class> => 
@@ -82,6 +83,12 @@ const applyClosure = (proc: Closure, args: Value[], env: Env): Result<Value> => 
     //return evalSequence(substitute(proc.body, vars, litArgs), env);
 }
 
+const applyClass = (proc: Class, args: Value[], env: Env): Result<Value> => {
+    
+    
+    
+    return makeOk(0);
+}
 // Evaluate a sequence of expressions (in a program)
 export const evalSequence = (seq: List<Exp>, env: Env): Result<Value> =>
     isNonEmptyList<Exp>(seq) ? 
