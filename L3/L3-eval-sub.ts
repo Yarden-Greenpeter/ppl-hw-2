@@ -8,7 +8,7 @@ import { isAppExp, isBoolExp, isDefineExp, isIfExp, isLitExp, isNumExp,
 import { makeBoolExp, makeLitExp, makeNumExp, makeProcExp, makeStrExp } from "./L3-ast";
 import { parseL3Exp } from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeEnv, Env, isEmptyEnv, isNonEmptyEnv } from "./L3-env-sub";
-import { isClosure, makeClosure, Closure, Value, makeClassEnv, isClass } from "./L3-value";
+import { isClosure, makeClosure, Closure, Value, makeClassEnv, isClass, SExpValue , SymbolSExp, isSymbolSExp} from "./L3-value";
 import { makeClass, Class  } from "./L3-value";
 import { makeObject, Object, isObject  } from "./L3-value";
 import { first, rest, isEmpty, List, isNonEmptyList } from '../shared/list';
@@ -85,20 +85,40 @@ const applyClosure = (proc: Closure, args: Value[], env: Env): Result<Value> => 
     //return evalSequence(substitute(proc.body, vars, litArgs), env);
 }
 
-// @@ Added - TODO - anything?
+// @@ Added
 const applyClass = (proc: Class, args: Value[], env: Env): Result<Object> => {
     return makeOk(makeObject(proc, args));
 }
 
-// @@ Added - TODO, look the same
-// const applyObject = (proc: Object, method: string, args: Value[], env: Env): Result<Value> => {
+// @@ Added
 const applyObject = (proc: Object, args: Value[], env: Env): Result<Value> => {
-    // input? output?
-    // check if class has the method that is requested - first(args)
-    // if yes, run it (applyClosure with correct args)
-    const class = proc.type;
-    const findMethod = class.
-    return makeOk(makeObject(class, args));
+    const objClass = proc.type;
+    const fields = objClass.fields;
+    if (isSymbolSExp(args[0])) {
+        // get all methods
+        const methods = objClass.methods;
+        if (methods.length == 0){
+            return makeFailure(`class has no methods`);
+        }
+        // get first method
+        if (!args[0] || typeof args[0].val !== 'string') {
+            return makeFailure(`no args or arg is not a string.`);
+        }
+        // check if class has the method that is requested - first(args)
+        // if yes, run it (applyClosure with correct args)
+        const method = methods[0].val;
+        if (isProcExp(method)){
+            const args = method.args;
+            const body = method.body
+            // Create an extended env for the object with all fields
+            const extEnv = fields.reduce((accEnv, field, index) => makeEnv(field.var, proc.args[index], accEnv), env);
+
+            // remove first method from the list after finish
+            return applyClosure(makeClosure(args, body), args.slice(1), extEnv);
+        }
+        return makeFailure("Not a procedure");
+    }
+    return makeFailure("Not a symbol");
 }
 
 
