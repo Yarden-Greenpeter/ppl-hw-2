@@ -8,7 +8,7 @@ import { isBoolExp, isCExp, isLitExp, isNumExp, isPrimOp, isStrExp, isVarRef,
          parseL3Exp,  DefineExp,
          ClassExp} from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeExtEnv, Env } from "./L3-env-env";
-import { isClosure, makeClosureEnv, Closure, Value } from "./L3-value";
+import { isClosure, makeClosureEnv, Closure, Value, Object, isObject,  } from "./L3-value";
 import { isClass, makeClassEnv, Class } from "./L3-value"; // new
 import { applyPrimitive } from "./evalPrimitive";
 import { allT, first, rest, isEmpty, isNonEmptyList } from "../shared/list";
@@ -50,16 +50,13 @@ const evalIf = (exp: IfExp, env: Env): Result<Value> =>
 const evalProc = (exp: ProcExp, env: Env): Result<Closure> =>
     makeOk(makeClosureEnv(exp.args, exp.body, env));
 
-// @@ Added here - TODO
-const evalClass = (exp: ClassExp, env: Env): Result<Class> =>
-    makeOk(makeClassEnv(exp.fields, exp.methods, env));
-
-
-// KEY: This procedure does NOT have an env parameter.
+// KEY: This procedure does NOT have an env parameter
 //      Instead we use the env of the closure.
 const applyProcedure = (proc: Value, args: Value[]): Result<Value> =>
     isPrimOp(proc) ? applyPrimitive(proc, args) :
     isClosure(proc) ? applyClosure(proc, args) :
+    isClass(proc) ? applyClass(proc, args, makeEmptyEnv()) :
+    isObject(proc) ? applyObject(proc, args, makeEmptyEnv()) :
     makeFailure(`Bad procedure ${format(proc)}`);
 
 const applyClosure = (proc: Closure, args: Value[]): Result<Value> => {
@@ -104,3 +101,45 @@ const evalLet = (exp: LetExp, env: Env): Result<Value> => {
     return bind(vals, (vals: Value[]) => 
         evalSequence(exp.body, makeExtEnv(vars, vals, env)));
 }
+
+
+// @@ Added here - TODO
+
+const evalClass = (exp: ClassExp, env: Env): Result<Class> =>
+    makeOk(makeClassEnv(exp.fields, exp.methods, env));
+
+const applyObject = (obj: Object, args: Value[], env: Env): Result<Value> => {
+    if (isSymbolSExp(args[0])) {
+      const methodName = args[0].val;
+      const methodBinding = obj.class.methods.find(
+        (b) => b.var.var === methodName
+      );
+  
+      if (!methodBinding) {
+        return makeFailure(`Unrecognized method: ${methodName}`);
+      }
+  
+      if (isProcExp(methodBinding.val)) {
+        const method = methodBinding.val;
+  
+        // Create an environment that includes the object's fields
+        const objectEnv = obj.class.fields.reduce(
+          (accEnv, field, index) =>
+            makeExtEnv([field.var], [obj.args[index]], accEnv),
+          env
+        );
+  
+        const methodClosure = makeClosureEnv(method.args, method.body, objectEnv);
+        return applyClosure(methodClosure, args.slice(1));
+      } else {
+        return makeFailure(`Method ${methodName} is not a procedure`);
+      }
+    } else {
+      return makeFailure(
+        `Expected a symbol for method name, but got ${format(args[0])}`
+      );
+    }
+  };
+  
+  const applyClass = (proc: Class, args: Value[], env: Env): Result<Value> =>
+    makeOk(makeObjectEnv(proc, args, env));
