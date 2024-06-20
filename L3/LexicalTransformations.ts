@@ -6,11 +6,9 @@ Purpose: Transform ClassExp to ProcExp
 Signature: class2proc(classExp)
 Type: ClassExp => ProcExp
 */
-// export const class2proc = (exp: ClassExp): ProcExp =>
-    export const class2proc = (exp: ClassExp): Result<ProcExp> =>
+export const class2proc = (exp: ClassExp): ProcExp =>
     //@TODO
     makeFailure("ToDo");
-
 
 /*
 Purpose: Transform all class forms in the given AST to procs
