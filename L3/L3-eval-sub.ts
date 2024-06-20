@@ -10,6 +10,7 @@ import { parseL3Exp } from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeEnv, Env, isEmptyEnv, isNonEmptyEnv } from "./L3-env-sub";
 import { isClosure, makeClosure, Closure, Value, makeClassEnv, isClass } from "./L3-value";
 import { makeClass, Class  } from "./L3-value";
+import { makeObject, Object, isObject  } from "./L3-value";
 import { first, rest, isEmpty, List, isNonEmptyList } from '../shared/list';
 import { isBoolean, isNumber, isString } from "../shared/type-predicates";
 import { Result, makeOk, makeFailure, bind, mapResult, mapv } from "../shared/result";
@@ -57,6 +58,7 @@ const L3applyProcedure = (proc: Value, args: Value[], env: Env): Result<Value> =
     isPrimOp(proc) ? applyPrimitive(proc, args) :
     isClosure(proc) ? applyClosure(proc, args, env) :
     isClass(proc) ? applyClass(proc, args, env) :
+    isObject(proc) ? applyObject(proc, args, env) :
     makeFailure(`Bad procedure ${format(proc)}`);
 
 const evalClass = (exp: ClassExp, env: Env): Result<Class> => 
@@ -83,12 +85,23 @@ const applyClosure = (proc: Closure, args: Value[], env: Env): Result<Value> => 
     //return evalSequence(substitute(proc.body, vars, litArgs), env);
 }
 
-const applyClass = (proc: Class, args: Value[], env: Env): Result<Value> => {
-    
-    
-    
-    return makeOk(0);
+// @@ Added - TODO - anything?
+const applyClass = (proc: Class, args: Value[], env: Env): Result<Object> => {
+    return makeOk(makeObject(proc, args));
 }
+
+// @@ Added - TODO, look the same
+// const applyObject = (proc: Object, method: string, args: Value[], env: Env): Result<Value> => {
+const applyObject = (proc: Object, args: Value[], env: Env): Result<Value> => {
+    // input? output?
+    // check if class has the method that is requested - first(args)
+    // if yes, run it (applyClosure with correct args)
+    const class = proc.type;
+    const findMethod = class.
+    return makeOk(makeObject(class, args));
+}
+
+
 // Evaluate a sequence of expressions (in a program)
 export const evalSequence = (seq: List<Exp>, env: Env): Result<Value> =>
     isNonEmptyList<Exp>(seq) ? 
