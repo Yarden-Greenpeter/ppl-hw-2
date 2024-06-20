@@ -41,6 +41,22 @@ export const makeClassEnv = (fields: VarDecl[], methods: Binding[], env: Env): C
     ({ tag: "Class", fields, methods, env });
 
 export const isClass = (x: any): x is Class => x.tag === "Class";
+
+
+// Added here "Object":
+export type Object = {
+    tag: "Object";
+    type: Class;
+    args: Value[];
+    env: Env;
+}
+export const makeObject = (type: Class, args: Value[]): Object =>
+    ({tag: "Object", type: type, args: args, env : makeEmptyEnv()});
+export const makeObjectEnv = (type: Class, args: Value[], env: Env): Object =>
+    ({ tag: "Object", type, args, env });
+
+export const isObject = (x: any): x is Object => x.tag === "Object";
+
 // ========================================================
 
 // SExp
@@ -57,9 +73,8 @@ export type SymbolSExp = {
     val: string;
 }
 
-// @@ Added "Class" here
-// export type SExpValue = number | boolean | string | PrimOp | Closure | SymbolSExp | EmptySExp | CompoundSExp | Class;
-export type SExpValue = number | boolean | string | PrimOp | Closure | SymbolSExp | EmptySExp | CompoundSExp | Class;
+// @@ Added "Class" and "Object" here
+export type SExpValue = number | boolean | string | PrimOp | Closure | SymbolSExp | EmptySExp | CompoundSExp | Class | Object;
 export const isSExp = (x: any): x is SExpValue =>
     typeof(x) === 'string' || typeof(x) === 'boolean' || typeof(x) === 'number' ||
     isSymbolSExp(x) || isCompoundSExp(x) || isEmptySExp(x) || isPrimOp(x) || isClosure(x);
@@ -92,10 +107,15 @@ export const compoundSExpToArray = (cs: CompoundSExp, res: string[]): string[] |
 export const compoundSExpToString = (cs: CompoundSExp, css = compoundSExpToArray(cs, [])): string => 
     isArray(css) ? `(${css.join(' ')})` :
     `(${css.s1.join(' ')} . ${css.s2})`
-//@@ Added classSexpTostring.
+
+// @@ Added class
 export const classSexpToString = (c: Class): string =>
     `<Class ${c.fields} ${c.methods}>`
-    
+
+// @@ Added object
+export const objectSexpToString = (c: Object): string =>
+    `<Object ${c.type} ${c.args}>`
+
 export const valueToString = (val: Value): string =>
     isNumber(val) ?  val.toString() :
     val === true ? '#t' :
@@ -106,5 +126,6 @@ export const valueToString = (val: Value): string =>
     isSymbolSExp(val) ? val.val :
     isEmptySExp(val) ? "'()" :
     isCompoundSExp(val) ? compoundSExpToString(val) :
-    isClass(val) ? classSexpToString(val) : //@@ Added this line to handle every Sexp
+    isClass(val) ? classSexpToString(val) : //@@ Added 
+    isObject(val) ? objectSexpToString(val) : //@@ Added 
     val;
