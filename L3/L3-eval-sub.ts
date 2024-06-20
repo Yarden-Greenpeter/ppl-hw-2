@@ -108,13 +108,11 @@ const applyObject = (proc: Object, args: Value[], env: Env): Result<Value> => {
         // if yes, run it (applyClosure with correct args)
         const method = methods[0].val;
         if (isProcExp(method)){
-            const args = method.args;
-            const body = method.body
             // Create an extended env for the object with all fields
             const extEnv = fields.reduce((accEnv, field, index) => makeEnv(field.var, proc.args[index], accEnv), env);
 
             // remove first method from the list after finish
-            return applyClosure(makeClosure(args, body), args.slice(1), extEnv);
+            return applyClosure(makeClosure(method.args, method.body), args.slice(1), extEnv);
         }
         return makeFailure("Not a procedure");
     }
