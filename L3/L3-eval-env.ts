@@ -8,7 +8,7 @@ import { isBoolExp, isCExp, isLitExp, isNumExp, isPrimOp, isStrExp, isVarRef,
          parseL3Exp,  DefineExp,
          ClassExp} from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeExtEnv, Env } from "./L3-env-env";
-import { isClosure, makeClosureEnv, Closure, Value, Object, isObject,  } from "./L3-value";
+import { isClosure, makeClosureEnv, Closure, Value, Object, isObject, makeObjectEnv, SymbolSExp, isSymbolSExp } from "./L3-value";
 import { isClass, makeClassEnv, Class } from "./L3-value"; // new
 import { applyPrimitive } from "./evalPrimitive";
 import { allT, first, rest, isEmpty, isNonEmptyList } from "../shared/list";
@@ -111,7 +111,7 @@ const evalClass = (exp: ClassExp, env: Env): Result<Class> =>
 const applyObject = (obj: Object, args: Value[], env: Env): Result<Value> => {
     if (isSymbolSExp(args[0])) {
       const methodName = args[0].val;
-      const methodBinding = obj.class.methods.find(
+      const methodBinding = obj.type.methods.find(
         (b) => b.var.var === methodName
       );
   
@@ -123,7 +123,7 @@ const applyObject = (obj: Object, args: Value[], env: Env): Result<Value> => {
         const method = methodBinding.val;
   
         // Create an environment that includes the object's fields
-        const objectEnv = obj.class.fields.reduce(
+        const objectEnv = obj.type.fields.reduce(
           (accEnv, field, index) =>
             makeExtEnv([field.var], [obj.args[index]], accEnv),
           env
