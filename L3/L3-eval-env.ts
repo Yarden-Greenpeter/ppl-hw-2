@@ -111,10 +111,9 @@ const evalClass = (exp: ClassExp, env: Env): Result<Class> =>
 
 const applyObject = (obj: Object, args: Value[], env: Env): Result<Value> => {
     if (isSymbolSExp(args[0])) {
+      const objClass = obj.type;
       const methodName = args[0].val;
-      const methodBinding = obj.type.methods.find(
-        (b) => b.var.var === methodName
-      );
+      const methodBinding = objClass.methods.find((x) => x.var.var === methodName);
   
       if (!methodBinding) {
         return makeFailure(`Unrecognized method: ${methodName}`);
@@ -124,21 +123,18 @@ const applyObject = (obj: Object, args: Value[], env: Env): Result<Value> => {
         const method = methodBinding.val;
   
         // Create an environment that includes the object's fields
-        const objectEnv = obj.type.fields.reduce(
-          (accEnv, field, index) =>
-            makeExtEnv([field.var], [obj.args[index]], accEnv),
-          env
-        );
+        const objectEnv = objClass.fields.reduce((accEnv, field, index) =>  
+          makeExtEnv([field.var], [obj.args[index]], accEnv),env);
   
         const methodClosure = makeClosureEnv(method.args, method.body, objectEnv);
         return applyClosure(methodClosure, args.slice(1));
-      } else {
-        return makeFailure(`Method ${methodName} is not a procedure`);
+      } 
+      else {
+        return makeFailure(`Method is not a procedure`);
       }
-    } else {
-      return makeFailure(
-        `Expected a symbol for method name, but got ${format(args[0])}`
-      );
+    } 
+    else {
+      return makeFailure(`Symbol not provided`);
     }
   };
   
