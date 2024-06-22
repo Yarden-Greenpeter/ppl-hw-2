@@ -1,6 +1,6 @@
 // L3-eval.ts
 import { map } from "ramda";
-import { isCExp, isLetExp, makeClassExp } from "./L3-ast";
+import { Binding, isCExp, isLetExp, makeClassExp } from "./L3-ast";
 import { BoolExp, CExp, Exp, IfExp, LitExp, NumExp,
          PrimOp, ProcExp, Program, StrExp, VarDecl, ClassExp } from "./L3-ast";
 import { isAppExp, isBoolExp, isDefineExp, isIfExp, isLitExp, isNumExp,
@@ -106,13 +106,18 @@ const applyObject = (proc: Object, args: Value[], env: Env): Result<Value> => {
         }
         // check if class has the method that is requested - first(args)
         // if yes, run it (applyClosure with correct args)
-        const method = methods[0].val;
-        if (isProcExp(method)){
+        const methodName = args[0].val;
+        const filteredMethods = methods.filter((x: Binding) => x.var.var === methodName);
+        if(filteredMethods.length === 0){
+            return makeFailure(`Unrecognized method: ${methodName}`);
+        }
+        const foundMethod = filteredMethods[0].val; 
+        if (isProcExp(foundMethod)){
             // Create an extended env for the object with all fields
             const extEnv = fields.reduce((accEnv, field, index) => makeEnv(field.var, proc.args[index], accEnv), env);
 
             // remove first method from the list after finish
-            return applyClosure(makeClosure(method.args, method.body), args.slice(1), extEnv);
+            return applyClosure(makeClosure(foundMethod.args, foundMethod.body), args.slice(1), extEnv);
         }
         return makeFailure("Not a procedure");
     }

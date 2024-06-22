@@ -110,11 +110,11 @@ export const compoundSExpToString = (cs: CompoundSExp, css = compoundSExpToArray
 
 // @@ Added class
 export const classSexpToString = (c: Class): string =>
-    `<Class ${c.fields} ${c.methods}>`
+    `Class`
 
 // @@ Added object
 export const objectSexpToString = (c: Object): string =>
-    `<Object ${c.type} ${c.args}>`
+    `Object`
 
 export const valueToString = (val: Value): string =>
     isNumber(val) ?  val.toString() :

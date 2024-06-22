@@ -6,7 +6,8 @@ import { isBoolExp, isCExp, isLitExp, isNumExp, isPrimOp, isStrExp, isVarRef,
          isAppExp, isDefineExp, isIfExp, isLetExp, isProcExp,
          Binding, VarDecl, CExp, Exp, IfExp, LetExp, ProcExp, Program,
          parseL3Exp,  DefineExp,
-         ClassExp} from "./L3-ast";
+         ClassExp,
+         isClassExp} from "./L3-ast";
 import { applyEnv, makeEmptyEnv, makeExtEnv, Env } from "./L3-env-env";
 import { isClosure, makeClosureEnv, Closure, Value, Object, isObject, makeObjectEnv, SymbolSExp, isSymbolSExp } from "./L3-value";
 import { isClass, makeClassEnv, Class } from "./L3-value"; // new
@@ -36,7 +37,7 @@ const applicativeEval = (exp: CExp, env: Env): Result<Value> =>
                               (args: Value[]) =>
                                  applyProcedure(proc, args))) :
     // @@ added here
-    isClass(exp) ? evalClass(exp, env) :
+    isClassExp(exp) ? evalClass(exp, env) :
     makeFailure('"let" not supported (yet)');
 
 export const isTrueValue = (x: Value): boolean =>
@@ -103,17 +104,16 @@ const evalLet = (exp: LetExp, env: Env): Result<Value> => {
 }
 
 
-// @@ Added here - TODO
+// @@ Added here
 
 const evalClass = (exp: ClassExp, env: Env): Result<Class> =>
     makeOk(makeClassEnv(exp.fields, exp.methods, env));
 
 const applyObject = (obj: Object, args: Value[], env: Env): Result<Value> => {
     if (isSymbolSExp(args[0])) {
+      const objClass = obj.type;
       const methodName = args[0].val;
-      const methodBinding = obj.type.methods.find(
-        (b) => b.var.var === methodName
-      );
+      const methodBinding = objClass.methods.find((x) => x.var.var === methodName);
   
       if (!methodBinding) {
         return makeFailure(`Unrecognized method: ${methodName}`);
@@ -123,21 +123,18 @@ const applyObject = (obj: Object, args: Value[], env: Env): Result<Value> => {
         const method = methodBinding.val;
   
         // Create an environment that includes the object's fields
-        const objectEnv = obj.type.fields.reduce(
-          (accEnv, field, index) =>
-            makeExtEnv([field.var], [obj.args[index]], accEnv),
-          env
-        );
+        const objectEnv = objClass.fields.reduce((accEnv, field, index) =>  
+          makeExtEnv([field.var], [obj.args[index]], accEnv),env);
   
         const methodClosure = makeClosureEnv(method.args, method.body, objectEnv);
         return applyClosure(methodClosure, args.slice(1));
-      } else {
-        return makeFailure(`Method ${methodName} is not a procedure`);
+      } 
+      else {
+        return makeFailure(`Method is not a procedure`);
       }
-    } else {
-      return makeFailure(
-        `Expected a symbol for method name, but got ${format(args[0])}`
-      );
+    } 
+    else {
+      return makeFailure(`Symbol not provided`);
     }
   };
   
