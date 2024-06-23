@@ -1,21 +1,7 @@
-import { ClassExp, ProcExp, Exp, Program, makeProcExp, makeVarDecl, Binding, IfExp, BoolExp, makeBoolExp, makeIfExp, makeAppExp, makePrimOp, makeVarRef, makeLitExp } from "./L3-ast";
-import { Result, makeFailure, makeOk } from "../shared/result";
+import { ClassExp, ProcExp, Exp, Program, isProcExp, isLetExp, isLitExp, makeProcExp, makeVarDecl, Binding, makeProgram, IfExp, BoolExp, makeBoolExp, makeIfExp, makeAppExp, makePrimOp, makeVarRef, makeLitExp, isExp, isProgram, isClassExp, isDefineExp, DefineExp, CExp, makeDefineExp, isNumExp, isBoolExp, isStrExp, isPrimOp, isVarRef, isAppExp, isIfExp } from "./L3-ast";
+import { Result, makeFailure, makeOk, bind, mapResult } from "../shared/result";
 import { isEmpty, slice } from "ramda";
 import { makeSymbolSExp } from "./L3-value";
-/*
-for 0<=i<=n-1 argi = field i
-argn = method name
-body{
-    if argn === methodname0 do method 0
-    else if argn ====methodname1 do method 1
-    if argn != method names make error!
-}
-func(arg1, arg2, arg3, ....., argn){
-    body
-}
-
-*/
-
 
 /*
 Purpose: Transform ClassExp to ProcExp
@@ -29,12 +15,12 @@ export const class2proc = (exp: ClassExp): ProcExp =>
 const makeMethods = (methodsBinding : Binding[]): IfExp|BoolExp => {
     return isEmpty(methodsBinding) ? makeBoolExp(false):
     makeIfExp(
-        makeAppExp(makePrimOp("eq?"), [makeVarRef("msg"), 
-                                                makeLitExp(makeSymbolSExp(methodsBinding[0].var.var))]),
+        //test
+        makeAppExp(makePrimOp("eq?"), [makeVarRef("msg"), makeLitExp(makeSymbolSExp(methodsBinding[0].var.var))]),
+        //then
         makeAppExp(methodsBinding[0].val, []),
-        methodsBinding.length > 1 ? 
-        makeMethods(methodsBinding.slice(1)): 
-        makeBoolExp(false)
+        //else 
+        makeMethods(methodsBinding.slice(1))
     )
 }
 
@@ -44,5 +30,29 @@ Signature: lexTransform(AST)
 Type: [Exp | Program] => Result<Exp | Program>
 */
 
-export const lexTransform = (exp: Exp | Program): Result<Exp | Program> =>
-    {return makeFailure("TODO")}
+export const lexTransform = (exp: Exp | Program): Result<Exp | Program> => {
+    return isExp(exp) ? (transformExp(exp)) :
+           bind(mapResult(transformExp, exp.exps), (exps: Exp[]) => makeOk(makeProgram(exps)))
+}
+
+const transformExp = (exp: Exp): Result<Exp> => {
+    return isDefineExp(exp) ? 
+    bind(transformCExp(exp.val), (val: CExp) => makeOk(makeDefineExp(exp.var, val))) :
+    transformCExp(exp);
+};
+// NumExp | BoolExp | StrExp | PrimOp | VarRef;
+// AppExp | IfExp | ProcExp | LetExp | LitExp | ClassExp;
+const transformCExp = (exp: Exp): Result<CExp> => {
+    return isNumExp(exp) ? makeOk(exp) :
+           isBoolExp(exp) ? makeOk(exp) :
+           isStrExp(exp) ? makeOk(exp) :
+           isPrimOp(exp) ? makeOk(exp) :
+           isVarRef(exp) ? makeOk(exp) :
+           isAppExp(exp) ? makeOk(exp) :
+           isIfExp(exp) ? makeOk(exp) :
+           isProcExp(exp) ? makeOk(exp) :
+           isLetExp(exp) ? makeOk(exp) :
+           isLitExp(exp) ? makeOk(exp) :
+           isClassExp(exp) ? makeOk(class2proc(exp)) :
+           makeFailure("Undifiended expression")
+}
